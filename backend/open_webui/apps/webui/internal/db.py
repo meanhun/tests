@@ -47,28 +47,39 @@ class JSONField(types.TypeDecorator):
             return json.loads(value)
 
 
-# Workaround to handle the peewee migration
-# This is required to ensure the peewee migration is handled before the alembic migration
+# # Workaround to handle the peewee migration
+# # This is required to ensure the peewee migration is handled before the alembic migration
+# def handle_peewee_migration(DATABASE_URL):
+#     # db = None
+#     try:
+#         # Replace the postgresql:// with postgres:// to handle the peewee migration
+#         db = register_connection(DATABASE_URL.replace("postgresql://", "postgres://"))
+#         migrate_dir = OPEN_WEBUI_DIR / "apps" / "webui" / "internal" / "migrations"
+#         router = Router(db, logger=log, migrate_dir=migrate_dir)
+#         router.run()
+#         db.close()
+
+#     except Exception as e:
+#         log.error(f"Failed to initialize the database connection: {e}")
+#         raise
+#     finally:
+#         # Properly closing the database connection
+#         if db and not db.is_closed():
+#             db.close()
+
+#         # Assert if db connection has been closed
+#         assert db.is_closed(), "Database connection is still open."
+
 def handle_peewee_migration(DATABASE_URL):
-    # db = None
+    if not DATABASE_URL:
+        raise ValueError("DATABASE_URL is not set or invalid.")
     try:
-        # Replace the postgresql:// with postgres:// to handle the peewee migration
         db = register_connection(DATABASE_URL.replace("postgresql://", "postgres://"))
-        migrate_dir = OPEN_WEBUI_DIR / "apps" / "webui" / "internal" / "migrations"
-        router = Router(db, logger=log, migrate_dir=migrate_dir)
-        router.run()
-        db.close()
-
-    except Exception as e:
-        log.error(f"Failed to initialize the database connection: {e}")
-        raise
-    finally:
-        # Properly closing the database connection
         if db and not db.is_closed():
-            db.close()
-
-        # Assert if db connection has been closed
-        assert db.is_closed(), "Database connection is still open."
+            print("Database connection established.")
+        return db
+    except AttributeError:
+        raise ValueError("Invalid DATABASE_URL. Ensure it follows the correct format.")
 
 
 handle_peewee_migration(DATABASE_URL)
