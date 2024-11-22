@@ -15,11 +15,17 @@ from open_webui.constants import ERROR_MESSAGES
 # Load .env file
 ####################################
 
+
 OPEN_WEBUI_DIR = Path(__file__).parent  # the path containing this file
 print(OPEN_WEBUI_DIR)
 
 BACKEND_DIR = OPEN_WEBUI_DIR.parent  # the path containing this file
-BASE_DIR = BACKEND_DIR.parent  # the path containing the backend/
+# BASE_DIR = BACKEND_DIR.parent  # the path containing the backend/
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data"
+
+# Tạo thư mục data nếu chưa tồn tại
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 print(BACKEND_DIR)
 print(BASE_DIR)
