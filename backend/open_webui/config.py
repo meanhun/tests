@@ -153,9 +153,21 @@ DEFAULT_CONFIG = {
 
 
 def get_config():
+    """
+    Retrieve configuration from the database if available, otherwise return the default configuration.
+    """
     with get_db() as db:
-        config_entry = db.query(Config).order_by(Config.id.desc()).first()
-        return config_entry.data if config_entry else DEFAULT_CONFIG
+        if db is None:  # Kiểm tra nếu không có kết nối database
+            log.warning("No database connection. Returning default configuration.")
+            return DEFAULT_CONFIG
+
+        try:
+            config_entry = db.query(Config).order_by(Config.id.desc()).first()
+            return config_entry.data if config_entry else DEFAULT_CONFIG
+        except Exception as e:
+            log.error(f"Database query error: {e}")
+            return DEFAULT_CONFIG
+
 
 
 CONFIG_DATA = get_config()
