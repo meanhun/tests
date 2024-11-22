@@ -57,7 +57,9 @@ def run_migrations():
         print(f"Error: {e}")
 
 
-run_migrations()
+# Comment hoặc bỏ qua migrations
+# run_migrations()
+
 
 
 class Config(Base):
@@ -75,30 +77,40 @@ def load_json_config():
         return json.load(file)
 
 
+# def save_to_db(data):
+#     with get_db() as db:
+#         existing_config = db.query(Config).first()
+#         if not existing_config:
+#             new_config = Config(data=data, version=0)
+#             db.add(new_config)
+#         else:
+#             existing_config.data = data
+#             existing_config.updated_at = datetime.now()
+#             db.add(existing_config)
+#         db.commit()
 def save_to_db(data):
-    with get_db() as db:
-        existing_config = db.query(Config).first()
-        if not existing_config:
-            new_config = Config(data=data, version=0)
-            db.add(new_config)
-        else:
-            existing_config.data = data
-            existing_config.updated_at = datetime.now()
-            db.add(existing_config)
-        db.commit()
+    # Không thực hiện lưu vào cơ sở dữ liệu
+    print("Skipping save_to_db")
 
 
+
+# def reset_config():
+#     with get_db() as db:
+#         db.query(Config).delete()
+#         db.commit()
 def reset_config():
-    with get_db() as db:
-        db.query(Config).delete()
-        db.commit()
+    # Không xóa cấu hình
+    print("Skipping reset_config")
 
 
 # When initializing, check if config.json exists and migrate it to the database
+# if os.path.exists(f"{DATA_DIR}/config.json"):
+#     data = load_json_config()
+#     save_to_db(data)
+#     os.rename(f"{DATA_DIR}/config.json", f"{DATA_DIR}/old_config.json")
 if os.path.exists(f"{DATA_DIR}/config.json"):
-    data = load_json_config()
-    save_to_db(data)
-    os.rename(f"{DATA_DIR}/config.json", f"{DATA_DIR}/old_config.json")
+    print("Skipping migration of config.json to database")
+
 
 DEFAULT_CONFIG = {
     "version": 0,
@@ -153,10 +165,14 @@ DEFAULT_CONFIG = {
 }
 
 
+# def get_config():
+#     with get_db() as db:
+#         config_entry = db.query(Config).order_by(Config.id.desc()).first()
+#         return config_entry.data if config_entry else DEFAULT_CONFIG
+
 def get_config():
-    with get_db() as db:
-        config_entry = db.query(Config).order_by(Config.id.desc()).first()
-        return config_entry.data if config_entry else DEFAULT_CONFIG
+    # Bỏ qua truy vấn cơ sở dữ liệu, trả về cấu hình mặc định
+    return DEFAULT_CONFIG
 
 
 CONFIG_DATA = get_config()
