@@ -1,4 +1,5 @@
 import logging
+from contextlib import contextmanager
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
@@ -18,6 +19,13 @@ SessionLocal = sessionmaker(
     autocommit=False, autoflush=False, bind=engine, expire_on_commit=False
 ) if engine else None
 Session = None  # Không cần sử dụng session
+
+
+@contextmanager
+def get_db():
+    """Hàm giả lập để quản lý session database."""
+    log.info("No database session is available. This is a mock function.")
+    yield None  # Trả về None để mô phỏng không có database
 
 
 def get_session():
