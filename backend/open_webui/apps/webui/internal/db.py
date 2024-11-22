@@ -48,15 +48,11 @@ class JSONField(types.TypeDecorator):
 
 
 # Workaround to handle the peewee migration
-# This is required to ensure the peewee migration is handled before the alembic migration
-
 def handle_peewee_migration(database_url):
-    # Bỏ qua nếu `database_url` không hợp lệ
     if not database_url or "sqlite:///:memory:" in database_url:
         log.info("Skipping database migration due to missing or in-memory DATABASE_URL.")
         return
 
-    # Thực hiện logic di trú như cũ nếu `database_url` hợp lệ
     db = None
     try:
         db = register_connection(database_url.replace("postgresql://", "postgres://"))
@@ -70,10 +66,11 @@ def handle_peewee_migration(database_url):
             db.close()
         assert db.is_closed(), "Database connection is still open."
 
+
 SQLALCHEMY_DATABASE_URL = DATABASE_URL
 engine = None
 
-if SQLALCHEMY_DATABASE_URL:  # Chỉ khởi tạo engine khi DATABASE_URL hợp lệ
+if SQLALCHEMY_DATABASE_URL:  # Only initialize the engine if DATABASE_URL is valid
     if "sqlite" in SQLALCHEMY_DATABASE_URL:
         engine = create_engine(
             SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
@@ -102,10 +99,22 @@ Base = declarative_base()
 Session = scoped_session(SessionLocal) if SessionLocal else None
 
 
+@contextmanager
+def get_db():
+    """A context manager to manage the database session."""
+    db = None
+    try:
+        db = get_session()
+        yield db
+    finally:
+        if db:
+            db.close()
+
+
 def get_session():
     if not SessionLocal:
         log.info("Skipping session creation as DATABASE_URL is not set.")
-        return  # Không thực hiện gì nếu DATABASE_URL là None
+        return  # No action if DATABASE_URL is not set
     db = SessionLocal()
     try:
         yield db
@@ -113,66 +122,8 @@ def get_session():
         db.close()
 
 
-# def handle_peewee_migration(DATABASE_URL):
-#     # db = None
-#     try:
-#         # Replace the postgresql:// with postgres:// to handle the peewee migration
-#         db = register_connection(DATABASE_URL.replace("postgresql://", "postgres://"))
-#         migrate_dir = OPEN_WEBUI_DIR / "apps" / "webui" / "internal" / "migrations"
-#         router = Router(db, logger=log, migrate_dir=migrate_dir)
-#         router.run()
-#         db.close()
-
-#     except Exception as e:
-#         log.error(f"Failed to initialize the database connection: {e}")
-#         raise
-#     finally:
-#         # Properly closing the database connection
-#         if db and not db.is_closed():
-#             db.close()
-
-#         # Assert if db connection has been closed
-#         assert db.is_closed(), "Database connection is still open."
-
-
-# handle_peewee_migration(DATABASE_URL)
-
-
-# SQLALCHEMY_DATABASE_URL = DATABASE_URL
-# if "sqlite" in SQLALCHEMY_DATABASE_URL:
-#     engine = create_engine(
-#         SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-#     )
-# else:
-#     if DATABASE_POOL_SIZE > 0:
-#         engine = create_engine(
-#             SQLALCHEMY_DATABASE_URL,
-#             pool_size=DATABASE_POOL_SIZE,
-#             max_overflow=DATABASE_POOL_MAX_OVERFLOW,
-#             pool_timeout=DATABASE_POOL_TIMEOUT,
-#             pool_recycle=DATABASE_POOL_RECYCLE,
-#             pool_pre_ping=True,
-#             poolclass=QueuePool,
-#         )
-#     else:
-#         engine = create_engine(
-#             SQLALCHEMY_DATABASE_URL, pool_pre_ping=True, poolclass=NullPool
-#         )
-
-
-# SessionLocal = sessionmaker(
-#     autocommit=False, autoflush=False, bind=engine, expire_on_commit=False
-# )
-# Base = declarative_base()
-# Session = scoped_session(SessionLocal)
-
-
-# def get_session():
-#     db = SessionLocal()
-#     try:
-#         yield db
-#     finally:
-#         db.close()
-
-
-# get_db = contextmanager(get_session)
+# Call migration handling
+if DATABASE_URL:
+    handle_peewee_migration(DATABASE_URL)
+else:
+    log.info("No DATABASE_URL provided, skipping database migration and connection.")
