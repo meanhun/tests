@@ -196,15 +196,6 @@ CHANGELOG = changelog_json
 SAFE_MODE = os.environ.get("SAFE_MODE", "false").lower() == "true"
 
 ####################################
-# ENABLE_FORWARD_USER_INFO_HEADERS
-####################################
-
-ENABLE_FORWARD_USER_INFO_HEADERS = (
-    os.environ.get("ENABLE_FORWARD_USER_INFO_HEADERS", "False").lower() == "true"
-)
-
-
-####################################
 # WEBUI_BUILD_HASH
 ####################################
 
@@ -263,11 +254,12 @@ if os.path.exists(f"{DATA_DIR}/ollama.db"):
 else:
     pass
 
-DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{DATA_DIR}/webui.db")
+DATABASE_URL = None
+# # DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{DATA_DIR}/webui.db")
 
-# Replace the postgres:// with postgresql://
-if "postgres://" in DATABASE_URL:
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://")
+# # Replace the postgres:// with postgresql://
+# if "postgres://" in DATABASE_URL:
+#     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://")
 
 DATABASE_POOL_SIZE = os.environ.get("DATABASE_POOL_SIZE", 0)
 
